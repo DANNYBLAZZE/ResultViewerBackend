@@ -1,19 +1,10 @@
 const express = require("express");
-const session = require("express-session");
 const pool = require("../db");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 
 // Configure session middleware
-router.use(
-    session({
-        secret: "your_secret_key", // Session secret for encryption
-        resave: false,
-        saveUninitialized: true,
 
-        cookie: {secure: false, maxAge: 3.1536e10}, // Cookie settings (e.g., secure: true for HTTPS)
-    })
-);
 
 // Middleware to set user data in session (simulated login)
 // router.use((req, res, next) => {
@@ -32,7 +23,7 @@ router.post("/login", async (req, res) => {
     const {mat_no, password} = req.body;
     try {
         const result = await pool.query(
-            "SELECT * FROM students WHERE mat_no = $1",
+            "SELECT mat_no AS id, password FROM students WHERE mat_no = $1",
             [mat_no]
         );
         if (result.rows.length === 0) {
@@ -48,7 +39,7 @@ router.post("/login", async (req, res) => {
             return;
         }
         req.session.user = {id: user.id};
-        res.status(200).send("Logged in successfully");
+        res.status(200).send({id: user.id});
     } catch (err) {
         console.error("Error logging in", err);
         res.status(500).send("An error occurred");
