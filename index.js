@@ -15,21 +15,21 @@ app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
 
-app.use(
-    session({
-        store: new pgSession({
+// app.use(
+//     session({
+//         store: new pgSession({
             
-            pool: pool, // Connection pool
-            tableName: "session", // Use another table-name than the default "session" one
-            // Insert connect-pg-simple options here
-        }),
-        secret: "your_secret_key", // Session secret for encryption
-        resave: false,
-        saveUninitialized: true,
+//             pool: pool, // Connection pool
+//             tableName: "session", // Use another table-name than the default "session" one
+//             // Insert connect-pg-simple options here
+//         }),
+//         secret: "your_secret_key", // Session secret for encryption
+//         resave: false,
+//         saveUninitialized: true,
 
-        cookie: {secure: false, maxAge: 3.1536e10}, // Cookie settings (e.g., secure: true for HTTPS)
-    })
-);
+//         cookie: {secure: false, maxAge: 3.1536e10}, // Cookie settings (e.g., secure: true for HTTPS)
+//     })
+// );
 
 const authRoutes = require("./routes/auth");
 
