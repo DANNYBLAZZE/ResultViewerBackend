@@ -1,11 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db"); // Import the PostgreSQL connection pool
-const multer = require('multer');
-const csv = require('csv-parser');
+const multer = require("multer");
+const csv = require("csv-parser");
+const {Readable} = require("stream");
 const fs = require("fs");
 
-const upload = multer({storage: multer.memoryStorage()})
+const upload = multer({storage: multer.memoryStorage()});
 
 router.use((req, res, next) => {
     console.log("session", req.session.user);
@@ -48,12 +49,62 @@ router.get("/:mat_no/get_result", async (req, res) => {
     }
 });
 
-router.post("/upload-result", upload.single("results", (req, res) => {
+router.post("/upload-result", upload.single("results"), async (req, res) => {
     const csvData = req.file.buffer;
 
-    const results = [];
+    const readCsv = await new Promise((resolve, reject) => {
+        const results = [];
+        Readable.from(req.file.buffer)
+            .pipe(csv())
+            .on("data", (data) => {
+                // Process each row of the CSV data
+                results.push(data);
+            })
+            .on("end", () => {
+                // End of CSV file
+                resolve(results);
+            })
+            .on("error", (err) => {
+                // Handle errors
+                console.error("Error reading CSV file:", err);
+                reject(err);
+            });
+    });
 
-    fs.createReadStream()    
-}))
+    const results = await readCsv;
+
+    const client = await pool.connect();
+    console.log("results");
+    
+
+    try {
+        await client.query("BEGIN");
+        for (const result of results) {
+            const {"Mat No": matNo, ...courses} = result;
+            for (const [course, score] of Object.entries(courses)) {
+                if (score) {
+                    await client.query(
+                        `INSERT INTO results (mat_no, course_code, score, session) VALUES ($1, $2, $3, $4)
+                         ON CONFLICT (mat_no, course_code, session) DO UPDATE 
+                         SET score = EXCLUDED.score
+                        `,
+                        [matNo, course, score, "2022/2023"]
+                    );
+                }
+            }
+        }
+        await client.query("COMMIT");
+        res.send(results)
+    } catch (error) {
+        await client.query("ROLLBACK");
+
+        console.log(error);
+        if (error.code == "23503")
+            return res.status(400).send("Mat No does not exist")
+        res.status(400).send("Error added the results")
+    } finally {
+        client.release();
+    }
+});
 
 module.exports = router;

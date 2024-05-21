@@ -5,7 +5,6 @@ const bcrypt = require("bcrypt");
 
 // Configure session middleware
 
-
 // Middleware to set user data in session (simulated login)
 // router.use((req, res, next) => {
 //     if (!req.session.user) {
@@ -30,7 +29,7 @@ router.post("/login/student", async (req, res) => {
             res.status(401).send("Invalid mat number or password");
             return;
         }
-        
+
         const user = result.rows[0];
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
@@ -40,6 +39,64 @@ router.post("/login/student", async (req, res) => {
         req.session.user = {id: user.id, role: "student"};
         res.status(200).send({id: user.id, role: "student"});
     } catch (err) {
+        console.error("Error logging in", err);
+        res.status(500).send("An error occurred");
+    }
+});
+
+// Route to simulate login
+router.post("/register/student", async (req, res) => {
+    const {mat_no, first_name, last_name, department_code, email, password} =
+        req.body;
+    try {
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await pool.query(
+            `INSERT INTO students (mat_no, first_name, last_name, department_code, email, password)
+            VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+                mat_no,
+                first_name,
+                last_name,
+                department_code,
+                email,
+                hashedPassword,
+            ]
+        );
+
+        req.session.user = {id: mat_no, role: "student"};
+        res.status(200).send({id: mat_no, role: "student"});
+    } catch (err) {
+        if (err.code == "23505")
+            return res.status(400).send("User already exists");
+        if (err.constraint == "students_mat_no_check")
+            return res.status(400).send("Not a valid matriculation number");
+
+        console.error("Error logging in", err);
+        res.status(500).send("An error occurred");
+    }
+});
+
+router.post("/register/lecturer", async (req, res) => {
+    const {staff_id, first_name, last_name, email, password} = req.body;
+    console.log(password);
+    try {
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await pool.query(
+            `INSERT INTO lecturers (staff_id, first_name, last_name, email, password)
+            VALUES ($1, $2, $3, $4, $5)`,
+            [staff_id, first_name, last_name, email, hashedPassword]
+        );
+
+        req.session.user = {id: staff_id, role: "lecturer"};
+        res.status(200).send({id: staff_id, role: "lecturer"});
+    } catch (err) {
+        if (err.code == "23505")
+            return res.status(400).send("User already exists");
+
         console.error("Error logging in", err);
         res.status(500).send("An error occurred");
     }
@@ -56,7 +113,7 @@ router.post("/login/lecturer", async (req, res) => {
             res.status(401).send("Invalid mat number or password");
             return;
         }
-        
+
         const user = result.rows[0];
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
@@ -70,7 +127,6 @@ router.post("/login/lecturer", async (req, res) => {
         res.status(500).send("An error occurred");
     }
 });
-
 
 // Route to simulate logout
 router.get("/logout", (req, res) => {
