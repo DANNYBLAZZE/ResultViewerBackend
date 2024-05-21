@@ -44,6 +44,6 @@ app.use("/", authRoutes);
 app.use("/student", userRoutes);
 app.use("/lecturer", adminRoutes)
 
-app.listen(port, () => {
+app.listen(process.env.PORT, () => {
     console.log(`Server is running on http://localhost:${process.env.PORT}`);
 });
