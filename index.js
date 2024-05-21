@@ -42,9 +42,9 @@ const userRoutes = require("./routes/user");
 const adminRoutes = require("./routes/admin")
 
 // Mount routes
-app.use("/api", authRoutes);
-app.use("/api/student", userRoutes);
-app.use("/api/lecturer", adminRoutes)
+app.use("/", authRoutes);
+app.use("/student", userRoutes);
+app.use("/lecturer", adminRoutes)
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
