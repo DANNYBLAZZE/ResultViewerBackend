@@ -14,7 +14,8 @@ const bcrypt = require("bcrypt");
 // });
 
 router.get("/", (req, res) => {
-    console.log(req.session);
+    // console.log(req.session);
+    res.status(200);
 });
 
 // Route to simulate login
