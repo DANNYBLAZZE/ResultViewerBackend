@@ -10,8 +10,6 @@ const cookieParser = require("cookie-parser");
 const pool = require("./db"); // Import the PostgreSQL connection pool
 
 
-const port = 5000;
-
 app.use(logger("combined"));
 app.use(express.json());
 app.use(cors());
@@ -47,5 +45,5 @@ app.use("/student", userRoutes);
 app.use("/lecturer", adminRoutes)
 
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server is running on http://localhost:${process.env.PORT}`);
 });
