@@ -15,6 +15,7 @@ const bcrypt = require("bcrypt");
 
 router.get("/", (req, res) => {
     console.log(req.session);
+    res.status(200).send("Server is running...")
 });
 
 // Route to simulate login
