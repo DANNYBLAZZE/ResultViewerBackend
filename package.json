@@ -23,5 +23,8 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "sleep-promise": "^9.1.0"
+  }
 }

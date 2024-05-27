@@ -15,41 +15,73 @@ const bcrypt = require("bcrypt");
 
 router.get("/", (req, res) => {
     console.log(req.session);
-    res.status(200).send("Server is running...")
+    res.status(200).send("Server is running...");
 });
 
 // Route to simulate login
 router.post("/login/student", async (req, res) => {
     const {mat_no, password} = req.body;
+
+
     try {
+        if (!mat_no) 
+            return res.status(400).send("Matriculation number is required");
+        if (!password) 
+            return res.status(400).send("Password is required");
+
         const result = await pool.query(
             "SELECT mat_no AS id, password FROM students WHERE mat_no = $1",
             [mat_no]
         );
         if (result.rows.length === 0) {
-            res.status(401).send("Invalid mat number or password");
+            res.status(401).send("Invalid matriculation number or password");
             return;
         }
 
         const user = result.rows[0];
         const passwordMatch = await bcrypt.compare(password, user.password);
+
         if (!passwordMatch) {
-            res.status(401).send("Invalid email or password");
+            res.status(401).send("Invalid matriculation number or password");
             return;
         }
-        req.session.user = {id: user.id, role: "student"};
-        res.status(200).send({id: user.id, role: "student"});
+
+        // res.cookie("role", "user");
+        const userInfo = {id: user.id, role: "student"};
+        res.cookie("user", JSON.stringify(userInfo), {
+            secure: false,
+            maxAge: 3.1536e10,
+        });
+        req.session.user = userInfo;
+        res.status(200).send(userInfo);
     } catch (err) {
         console.error("Error logging in", err);
         res.status(500).send("An error occurred");
     }
 });
 
+
 // Route to simulate login
 router.post("/register/student", async (req, res) => {
-    const {mat_no, first_name, last_name, department_code, email, password} =
+    let {mat_no, first_name, last_name, department_code, email, password} =
         req.body;
+    mat_no = (mat_no || "").toUpperCase();
+    department_code = (department_code || "").toLowerCase();
+
     try {
+        if (!mat_no) 
+            return res.status(400).send("Matriculation number is required");
+        if (!password) 
+            return res.status(400).send("Password is required");
+        if (!first_name) 
+            return res.status(400).send("First Name is required");
+        if (!last_name) 
+            return res.status(400).send("Last Name is required");
+        if (!department_code) 
+            return res.status(400).send("Department code is required");
+        if (!email) 
+            return res.status(400).send("Email is required");
+
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -66,11 +98,19 @@ router.post("/register/student", async (req, res) => {
             ]
         );
 
-        req.session.user = {id: mat_no, role: "student"};
-        res.status(200).send({id: mat_no, role: "student"});
+        const userInfo = {id: mat_no, role: "student"};
+        res.cookie("user", JSON.stringify(userInfo), {
+            secure: false,
+            maxAge: 3.1536e10,
+        });
+
+        req.session.user = userInfo;
+        res.status(200).send(userInfo);
     } catch (err) {
-        if (err.code == "23505")
+        if (err.code == "23505" && err.constraint == "students_pkey")
             return res.status(400).send("User already exists");
+        if (err.code == "23505" && err.constraint == "students_email_key")
+            return res.status(400).send("Email already exists for another user");
         if (err.constraint == "students_mat_no_check")
             return res.status(400).send("Not a valid matriculation number");
 
@@ -83,6 +123,17 @@ router.post("/register/lecturer", async (req, res) => {
     const {staff_id, first_name, last_name, email, password} = req.body;
     console.log(password);
     try {
+        if (!staff_id) 
+            return res.status(400).send("Staff Id is required");
+        if (!password) 
+            return res.status(400).send("Password is required");
+        if (!first_name) 
+            return res.status(400).send("First Name is required");
+        if (!last_name) 
+            return res.status(400).send("Last Name is required");
+        if (!email) 
+            return res.status(400).send("Email is required");
+
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -92,11 +143,22 @@ router.post("/register/lecturer", async (req, res) => {
             [staff_id, first_name, last_name, email, hashedPassword]
         );
 
-        req.session.user = {id: staff_id, role: "lecturer"};
-        res.status(200).send({id: staff_id, role: "lecturer"});
+        const userInfo = {id: staff_id, role: "lecturer"};
+
+        res.cookie("user", JSON.stringify(userInfo), {
+            secure: false,
+            maxAge: 3.1536e10,
+        });
+        req.session.user = userInfo;
+        res.status(200).send(userInfo);
     } catch (err) {
-        if (err.code == "23505")
+        if (err.code == "23505" && err.constraint == "lecturers_pkey")
             return res.status(400).send("User already exists");
+        if (err.code == "23505" && err.constraint == "lecturers_email_key")
+            return res.status(400).send("Email already exists for another user");
+        
+        // if (err.code == "23505")
+        //     return res.status(400).send("User already exists");
 
         console.error("Error logging in", err);
         res.status(500).send("An error occurred");
@@ -106,23 +168,34 @@ router.post("/register/lecturer", async (req, res) => {
 router.post("/login/lecturer", async (req, res) => {
     const {staff_id, password} = req.body;
     try {
+        if (!staff_id) 
+            return res.status(400).send("Staff Id is required");
+        if (!password) 
+            return res.status(400).send("Password is required");
+
         const result = await pool.query(
             "SELECT staff_id AS id, password FROM lecturers WHERE staff_id = $1",
             [staff_id]
         );
         if (result.rows.length === 0) {
-            res.status(401).send("Invalid mat number or password");
+            res.status(401).send("Invalid staff Id or password");
             return;
         }
 
         const user = result.rows[0];
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
-            res.status(401).send("Invalid email or password");
+            res.status(401).send("Invalid staff Id or password");
             return;
         }
-        req.session.user = {id: user.id, role: "lecturer"};
-        res.status(200).send({id: user.id, role: "lecturer"});
+
+        const userInfo = {id: user.id, role: "lecturer"};
+        res.cookie("user", JSON.stringify(userInfo), {
+            secure: false,
+            maxAge: 3.1536e10,
+        });
+        req.session.user = userInfo;
+        res.status(200).send(userInfo);
     } catch (err) {
         console.error("Error logging in", err);
         res.status(500).send("An error occurred");
