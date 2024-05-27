@@ -3,7 +3,6 @@ const router = express.Router();
 const pool = require("../db"); // Import the PostgreSQL connection pool
 
 router.use((req, res, next) => {
-    console.log("session", req.session.user);
     if (!req.session.user && req.path !== "/login") {
         return res.redirect("/login");
     }
@@ -12,8 +11,6 @@ router.use((req, res, next) => {
 
 router.get("/get_details", async (req, res) => {
     try {
-        // Query the database
-        console.log("session_data", req.session.user.id)
         const matNo = req.session.user.id;
         const {rows} = await pool.query(
             "SELECT mat_no, first_name, last_name, department_code, email FROM students WHERE mat_no = $1",
@@ -28,7 +25,6 @@ router.get("/get_details", async (req, res) => {
 
 router.get("/get_result", async (req, res) => {
     try {
-        // Query the database
         const matNo = req.session.user.id;
         const {rows} = await pool.query(
             "SELECT * FROM results WHERE mat_no = $1",

@@ -25,6 +25,7 @@ app.use(
         }),
         secret: "your_secret_key", // Session secret for encryption
         resave: false,
+        
         saveUninitialized: true,
 
         cookie: {secure: false, maxAge: 3.1536e10}, // Cookie settings (e.g., secure: true for HTTPS)

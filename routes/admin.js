@@ -4,7 +4,9 @@ const pool = require("../db"); // Import the PostgreSQL connection pool
 const multer = require("multer");
 const csv = require("csv-parser");
 const {Readable} = require("stream");
+const sleep = require('sleep-promise');
 const fs = require("fs");
+
 
 const upload = multer({storage: multer.memoryStorage()});
 
@@ -35,12 +37,19 @@ router.get("/get_details", async (req, res) => {
 
 router.get("/:mat_no/get_result", async (req, res) => {
     try {
+        // await sleep(5000);
         // Query the database
         const matNo = req.params["mat_no"];
         const {rows} = await pool.query(
             "SELECT * FROM results WHERE mat_no = $1",
             [matNo]
         );
+
+        if (rows.length == 0){
+            res.status(401).send("Matriculation number does not exist");
+            return;
+        }
+
         console.log(rows);
         res.json(rows); // Send the query result as JSON response
     } catch (err) {
