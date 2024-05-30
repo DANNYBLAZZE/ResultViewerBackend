@@ -59,6 +59,9 @@ router.get("/:mat_no/get_result", async (req, res) => {
 });
 
 router.post("/upload-result", upload.single("results"), async (req, res) => {
+    if (!req.file) 
+        return res.status(400).send("No data passed in the request body")
+
     const csvData = req.file.buffer;
 
     const readCsv = await new Promise((resolve, reject) => {
@@ -83,15 +86,17 @@ router.post("/upload-result", upload.single("results"), async (req, res) => {
     const results = await readCsv;
 
     const client = await pool.connect();
-    console.log("results");
+    console.log("results", results);
     
-
+    let recordCount = 0;
+    
     try {
         await client.query("BEGIN");
         for (const result of results) {
             const {"Mat No": matNo, ...courses} = result;
             for (const [course, score] of Object.entries(courses)) {
                 if (score) {
+                    recordCount++;
                     await client.query(
                         `INSERT INTO results (mat_no, course_code, score, session) VALUES ($1, $2, $3, $4)
                          ON CONFLICT (mat_no, course_code, session) DO UPDATE 
@@ -103,14 +108,14 @@ router.post("/upload-result", upload.single("results"), async (req, res) => {
             }
         }
         await client.query("COMMIT");
-        res.send(results)
+        res.status(200).end(`Added ${recordCount} records for ${results.length} students`)
     } catch (error) {
         await client.query("ROLLBACK");
 
         console.log(error);
         if (error.code == "23503")
             return res.status(400).send("Mat No does not exist")
-        res.status(400).send("Error added the results")
+        res.status(400).send("Error adding the results")
     } finally {
         client.release();
     }
