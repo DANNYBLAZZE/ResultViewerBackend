@@ -108,7 +108,7 @@ router.post("/upload-result", upload.single("results"), async (req, res) => {
             }
         }
         await client.query("COMMIT");
-        res.status(200).end(`Added ${recordCount} records for ${results.length} students`)
+        res.status(200).send(`Added ${recordCount} records for ${results.length} students`)
     } catch (error) {
         await client.query("ROLLBACK");
 
