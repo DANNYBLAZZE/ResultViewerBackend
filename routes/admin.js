@@ -13,10 +13,12 @@ const upload = multer({storage: multer.memoryStorage()});
 router.use((req, res, next) => {
     console.log("session", req.session.user);
     if (!req.session.user && req.path !== "/login") {
-        return res.redirect("/login");
+        // return res.redirect("/login");
+        return res.status(403).send({message: "Not Authorized"});
+
     }
     if (req.session.user.role != "lecturer")
-        return res.status(403).send("Not Authorized");
+        return res.status(403).send({message: "Not Authorized"});
     next();
 });
 
@@ -31,11 +33,12 @@ router.get("/get_details", async (req, res) => {
         res.json(rows[0]); // Send the query result as JSON response
     } catch (err) {
         console.error("Error executing query", err);
-        res.status(500).json({error: "Internal Server Error"});
+        res.status(500).json({message: "Internal Server Error"});
     }
 });
 
 router.get("/:mat_no/get_result", async (req, res) => {
+    console.log("yeah");
     try {
         // await sleep(5000);
         // Query the database
@@ -46,7 +49,7 @@ router.get("/:mat_no/get_result", async (req, res) => {
         );
 
         if (rows.length == 0){
-            res.status(401).send("Matriculation number does not exist");
+            res.status(401).send({message: "Matriculation number does not exist"});
             return;
         }
 
@@ -54,13 +57,13 @@ router.get("/:mat_no/get_result", async (req, res) => {
         res.json(rows); // Send the query result as JSON response
     } catch (err) {
         console.error("Error executing query", err);
-        res.status(500).json({error: "Internal Server Error"});
+        res.status(500).send({message: "Internal Server Error"});
     }
 });
 
 router.post("/upload-result", upload.single("results"), async (req, res) => {
     if (!req.file) 
-        return res.status(400).send("No data passed in the request body")
+        return res.status(400).send({message: "No data passed in the request body"})
 
     const csvData = req.file.buffer;
 
@@ -108,14 +111,14 @@ router.post("/upload-result", upload.single("results"), async (req, res) => {
             }
         }
         await client.query("COMMIT");
-        res.status(200).send(`Added ${recordCount} records for ${results.length} students`)
+        res.status(200).send({message: `Added ${recordCount} records for ${results.length} students`})
     } catch (error) {
         await client.query("ROLLBACK");
 
         console.log(error);
         if (error.code == "23503")
-            return res.status(400).send("Mat No does not exist")
-        res.status(400).send("Error adding the results")
+            return res.status(400).send({message: "Mat No does not exist"})
+        res.status(400).send({message: "Error adding the results"})
     } finally {
         client.release();
     }
