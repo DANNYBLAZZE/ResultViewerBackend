@@ -23,7 +23,7 @@ app.use(
             tableName: "session", // Use another table-name than the default "session" one
             // Insert connect-pg-simple options here
         }),
-        secret: "your_secret_key", // Session secret for encryption
+        secret: process.env.SECRET, // Session secret for encryption
         resave: false,
         
         saveUninitialized: true,
