@@ -25,16 +25,16 @@ router.post("/login/student", async (req, res) => {
 
     try {
         if (!mat_no) 
-            return res.status(400).send("Matriculation number is required");
+            return res.status(400).send({message: "Matriculation number is required"});
         if (!password) 
-            return res.status(400).send("Password is required");
+            return res.status(400).send({message: "Password is required"});
 
         const result = await pool.query(
             "SELECT mat_no AS id, password FROM students WHERE mat_no = $1",
             [mat_no]
         );
         if (result.rows.length === 0) {
-            res.status(401).send("Invalid matriculation number or password");
+            res.status(401).send({message: "Invalid matriculation number or password"});
             return;
         }
 
@@ -42,7 +42,7 @@ router.post("/login/student", async (req, res) => {
         const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (!passwordMatch) {
-            res.status(401).send("Invalid matriculation number or password");
+            res.status(401).send({message: "Invalid matriculation number or password"});
             return;
         }
 
@@ -56,7 +56,7 @@ router.post("/login/student", async (req, res) => {
         res.status(200).send(userInfo);
     } catch (err) {
         console.error("Error logging in", err);
-        res.status(500).send("An error occurred");
+        res.status(500).send({message: "An error occurred"});
     }
 });
 
@@ -70,17 +70,17 @@ router.post("/register/student", async (req, res) => {
 
     try {
         if (!mat_no) 
-            return res.status(400).send("Matriculation number is required");
+            return res.status(400).send({message: "Matriculation number is required"});
         if (!password) 
-            return res.status(400).send("Password is required");
+            return res.status(400).send({message: "Password is required"});
         if (!first_name) 
-            return res.status(400).send("First Name is required");
+            return res.status(400).send({message: "First Name is required"});
         if (!last_name) 
-            return res.status(400).send("Last Name is required");
+            return res.status(400).send({message: "Last Name is required"});
         if (!department_code) 
-            return res.status(400).send("Department code is required");
+            return res.status(400).send({message: "Department code is required"});
         if (!email) 
-            return res.status(400).send("Email is required");
+            return res.status(400).send({message: "Email is required"});
 
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -108,14 +108,14 @@ router.post("/register/student", async (req, res) => {
         res.status(200).send(userInfo);
     } catch (err) {
         if (err.code == "23505" && err.constraint == "students_pkey")
-            return res.status(400).send("User already exists");
+            return res.status(400).send({message: "User already exists"});
         if (err.code == "23505" && err.constraint == "students_email_key")
-            return res.status(400).send("Email already exists for another user");
+            return res.status(400).send({message: "Email already exists for another user"});
         if (err.constraint == "students_mat_no_check")
-            return res.status(400).send("Not a valid matriculation number");
+            return res.status(400).send({message: "Not a valid matriculation number"});
 
         console.error("Error logging in", err);
-        res.status(500).send("An error occurred");
+        res.status(500).send({message: "An error occurred"});
     }
 });
 
@@ -124,15 +124,15 @@ router.post("/register/lecturer", async (req, res) => {
     console.log(password);
     try {
         if (!staff_id) 
-            return res.status(400).send("Staff Id is required");
+            return res.status(400).send({message: "Staff Id is required"});
         if (!password) 
-            return res.status(400).send("Password is required");
+            return res.status(400).send({message: "Password is required"});
         if (!first_name) 
-            return res.status(400).send("First Name is required");
+            return res.status(400).send({message: "First Name is required"});
         if (!last_name) 
-            return res.status(400).send("Last Name is required");
+            return res.status(400).send({message: "Last Name is required"});
         if (!email) 
-            return res.status(400).send("Email is required");
+            return res.status(400).send({message: "Email is required"});
 
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -153,9 +153,9 @@ router.post("/register/lecturer", async (req, res) => {
         res.status(200).send(userInfo);
     } catch (err) {
         if (err.code == "23505" && err.constraint == "lecturers_pkey")
-            return res.status(400).send("User already exists");
+            return res.status(400).send({message: "User already exists"});
         if (err.code == "23505" && err.constraint == "lecturers_email_key")
-            return res.status(400).send("Email already exists for another user");
+            return res.status(400).send({message: "Email already exists for another user"});
         
         // if (err.code == "23505")
         //     return res.status(400).send("User already exists");
@@ -169,23 +169,23 @@ router.post("/login/lecturer", async (req, res) => {
     const {staff_id, password} = req.body;
     try {
         if (!staff_id) 
-            return res.status(400).send("Staff Id is required");
+            return res.status(400).send({message: "Staff Id is required"});
         if (!password) 
-            return res.status(400).send("Password is required");
+            return res.status(400).send({message: "Password is required"});
 
         const result = await pool.query(
             "SELECT staff_id AS id, password FROM lecturers WHERE staff_id = $1",
             [staff_id]
         );
         if (result.rows.length === 0) {
-            res.status(401).send("Invalid staff Id or password");
+            res.status(401).send({message: "Invalid staff Id or password"});
             return;
         }
 
         const user = result.rows[0];
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
-            res.status(401).send("Invalid staff Id or password");
+            res.status(401).send({message: "Invalid staff Id or password"});
             return;
         }
 
@@ -198,7 +198,7 @@ router.post("/login/lecturer", async (req, res) => {
         res.status(200).send(userInfo);
     } catch (err) {
         console.error("Error logging in", err);
-        res.status(500).send("An error occurred");
+        res.status(500).send({message: "An error occurred"});
     }
 });
 
@@ -207,10 +207,10 @@ router.get("/logout", (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.error("Error destroying session", err);
-            res.status(500).send("An error occurred");
+            res.status(500).send({message: "An error occurred"});
             return;
         }
-        res.send("Logged out successfully");
+        res.send({message: "Logged out successfully"});
     });
 });
 

@@ -4,7 +4,8 @@ const pool = require("../db"); // Import the PostgreSQL connection pool
 
 router.use((req, res, next) => {
     if (!req.session.user && req.path !== "/login") {
-        return res.redirect("/login");
+        // return res.redirect("/login");
+        return res.status(403).send({message: "Not Authorized"});
     }
     next();
 });
@@ -19,7 +20,7 @@ router.get("/get_details", async (req, res) => {
         res.json(rows[0]); // Send the query result as JSON response
     } catch (err) {
         console.error("Error executing query", err);
-        res.status(500).json({error: "Internal Server Error"});
+        res.status(500).json({message: "Internal Server Error"});
     }
 });
 
@@ -34,7 +35,7 @@ router.get("/get_result", async (req, res) => {
         res.json(rows); // Send the query result as JSON response
     } catch (err) {
         console.error("Error executing query", err);
-        res.status(500).json({error: "Internal Server Error"});
+        res.status(500).json({message: "Internal Server Error"});
     }
 });
 

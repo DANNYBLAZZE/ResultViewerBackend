@@ -43,7 +43,11 @@ const adminRoutes = require("./routes/admin")
 // Mount routes
 app.use("/", authRoutes);
 app.use("/student", userRoutes);
-app.use("/lecturer", adminRoutes)
+app.use("/lecturer", adminRoutes);
+
+app.use((err, req, res, next) => {
+    res.status(500).send({message: "something went wrong"});
+})
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on http://localhost:${process.env.PORT}`);
