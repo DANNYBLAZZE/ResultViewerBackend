@@ -113,6 +113,8 @@ router.post("/register/student", async (req, res) => {
             return res.status(400).send({message: "Email already exists for another user"});
         if (err.constraint == "students_mat_no_check")
             return res.status(400).send({message: "Not a valid matriculation number"});
+        if (err.code == "22001")
+            return res.status(400).send({message: "Department code can only be three characters long"});
 
         console.error("Error logging in", err);
         res.status(500).send({message: "An error occurred"});
