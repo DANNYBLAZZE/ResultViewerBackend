@@ -14,11 +14,11 @@ router.use((req, res, next) => {
     console.log("session", req.session.user);
     if (!req.session.user && req.path !== "/login") {
         // return res.redirect("/login");
-        return res.status(403).send({message: "Not Authorized"});
+        return res.status(401).send({message: "Not Authorized"});
 
     }
     if (req.session.user.role != "lecturer")
-        return res.status(403).send({message: "Not Authorized"});
+        return res.status(403).send({message: "You are not authorized to access this resource"});
     next();
 });
 
@@ -49,7 +49,7 @@ router.get("/:mat_no/get_result", async (req, res) => {
         );
 
         if (rows.length == 0){
-            res.status(401).send({message: "Matriculation number does not exist"});
+            res.status(400).send({message: "Matriculation number does not exist"});
             return;
         }
 
