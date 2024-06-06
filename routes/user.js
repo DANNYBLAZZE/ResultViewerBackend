@@ -5,7 +5,7 @@ const pool = require("../db"); // Import the PostgreSQL connection pool
 router.use((req, res, next) => {
     if (!req.session.user && req.path !== "/login") {
         // return res.redirect("/login");
-        return res.status(403).send({message: "Not Authorized"});
+        return res.status(401).send({message: "Not Authorized"});
     }
     next();
 });

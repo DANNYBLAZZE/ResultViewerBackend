@@ -34,7 +34,7 @@ router.post("/login/student", async (req, res) => {
             [mat_no]
         );
         if (result.rows.length === 0) {
-            res.status(401).send({message: "Invalid matriculation number or password"});
+            res.status(400).send({message: "Invalid matriculation number or password"});
             return;
         }
 
