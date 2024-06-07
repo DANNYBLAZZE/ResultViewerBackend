@@ -69,7 +69,10 @@ router.post("/upload-result", upload.single("results"), async (req, res) => {
 
     const readCsv = await new Promise((resolve, reject) => {
         const results = [];
-        Readable.from(req.file.buffer)
+
+        const stream = Readable.from(req.file.buffer);
+        stream.setEncoding("utf8")
+        stream
             .pipe(csv())
             .on("data", (data) => {
                 // Process each row of the CSV data
