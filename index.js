@@ -53,6 +53,7 @@ app.use("/student", userRoutes);
 app.use("/lecturer", adminRoutes);
 
 app.use((err, req, res, next) => {
+    console.error(err);
     res.status(500).send({message: "something went wrong"});
 });
 
